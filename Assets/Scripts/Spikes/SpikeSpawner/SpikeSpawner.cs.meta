@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 01a3872d81c10d448aaeec461bfb889b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - timer: {instanceID: 0}
+  - sideSelector: {instanceID: 0}
+  - prefabSelector: {instanceID: 0}
+  - spikePrefab: {fileID: 5838555876030060775, guid: aaff78b53b71d3745a9e7e0fd46185c9, type: 3}
+  - fastSpikePrefab: {instanceID: 0}
+  - doubleSpikePrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

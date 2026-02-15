@@ -144,7 +144,7 @@ public class PlayerController : MonoBehaviour
     public float GetVelocity() => velocityX;
     public float GetTargetX() => targetX;
 
-    // ✅ ДИАГНОСТИКА (для отладки)
+    // ✅ ДИАГНОСТИКА (для отладки) в конечном итоге убрать сильно сказывается на производительности 
     void OnGUI()
     {
         GUILayout.Label($"IsMoving: {isMoving}");
