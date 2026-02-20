@@ -2,7 +2,7 @@
 
 public class ScoreUpdater : MonoBehaviour
 {
-    [SerializeField] private GameTimer gameTimer;
+    [SerializeField] public GameTimer gameTimer;
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private DifficultyCalculator difficulty;
     [SerializeField] private int basePointsPerSecond = 10;

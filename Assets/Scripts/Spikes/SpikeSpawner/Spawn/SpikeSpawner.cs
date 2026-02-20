@@ -22,9 +22,9 @@ public class SpikeSpawner : MonoBehaviour
     private float currentMinInterval;
     private float currentMaxInterval;
     private float timer;
-    //private bool lastSpawnedLeft = true;
     private SpikeSpawnSideSelector sideSelector;
     private SpikePrefabSelector prefabSelector;
+    private SpikePool spikePool;
 
     void Start()
     {
@@ -32,13 +32,14 @@ public class SpikeSpawner : MonoBehaviour
         currentMaxInterval = baseMaxInterval;
         timer = Random.Range(currentMinInterval, currentMaxInterval);
 
-        // ✅ Авто-добавление компонентов
         sideSelector = gameObject.AddComponent<SpikeSpawnSideSelector>();
         prefabSelector = gameObject.AddComponent<SpikePrefabSelector>();
 
-        // ✅ Передача данных напрямую
         sideSelector.SetSpawnerData(leftWallX, rightWallX, oppositeSideBoost);
         prefabSelector.SetSpawnerData(spikePrefab, fastSpikePrefab, doubleSpikePrefab);
+
+        // ✅ НАЙТИ ПУЛ
+        spikePool = FindObjectOfType<SpikePool>();
     }
 
     void Update()
@@ -59,7 +60,19 @@ public class SpikeSpawner : MonoBehaviour
         var (x, rotation) = sideSelector.GetSpawnPosition();
 
         Vector3 pos = new Vector3(x, spawnY, 0);
-        Instantiate(prefab, pos, Quaternion.Euler(0, 0, rotation), transform);
+
+        // ✅ ИЗМЕНЕНО: Pool вместо Instantiate
+        if (spikePool != null)
+        {
+            GameObject spike = spikePool.SpawnFromPool(prefab, pos, Quaternion.Euler(0, 0, rotation));
+            if (spike != null)
+                spike.transform.SetParent(transform);
+        }
+        else
+        {
+            // Fallback
+            Instantiate(prefab, pos, Quaternion.Euler(0, 0, rotation), transform);
+        }
     }
 
     public void UpdateSpawnRates(float multiplier)
