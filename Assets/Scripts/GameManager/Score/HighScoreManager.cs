@@ -4,6 +4,9 @@ using UnityEngine.SceneManagement;
 
 public class HighScoreManager : MonoBehaviour
 {
+    /// <summary>
+    /// Сохраняет лучший рекорд в ключе?
+    /// </summary>
     [Header("UI (опционально)")]
     [SerializeField] public TMP_Text highScoreText;
 

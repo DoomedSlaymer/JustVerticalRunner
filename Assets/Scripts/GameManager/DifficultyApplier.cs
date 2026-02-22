@@ -2,6 +2,9 @@
 
 public class DifficultyApplier : MonoBehaviour
 {
+/// <summary>
+/// скрипт берёт часть из DifficultyManager. Ошибко
+/// </summary>
     [SerializeField] private GameTimer gameTimer;
     [SerializeField] private DifficultyCalculator calculator;
     [SerializeField] private SpikeSpawnTimer spawnerTimer; // ✅ Изменено!

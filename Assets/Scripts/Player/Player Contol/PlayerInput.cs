@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerInput : MonoBehaviour
 {
+    /// <summary>
+    /// отвечает за ввод состояение буффера
+    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
     [SerializeField] private PlayerMovement movement;

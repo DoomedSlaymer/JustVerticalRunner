@@ -2,6 +2,9 @@
 
 public class SpikeSpawner : MonoBehaviour
 {
+    /// <summary>
+    /// использует префабы (вероятно не нужно) спавнит шипы из пулла, и использует логику из sideselector и prefabside
+    /// </summary>
     [Header("Префабы")]
     [SerializeField] private GameObject spikePrefab;
     [SerializeField] private GameObject fastSpikePrefab;

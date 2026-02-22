@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerState : MonoBehaviour
 {
+    /// <summary>
+    /// мне бы стоило узнать что это такое.
+    /// </summary>
     private float velocityX;
     private bool isMoving;
     private float targetX;

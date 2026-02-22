@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class SpikePrefabSelector : MonoBehaviour
 {
+    /// <summary>
+    /// выборка из 3 объектов препятствий
+    /// </summary>
     private GameObject spikePrefab;
     private GameObject fastSpikePrefab;
     private GameObject doubleSpikePrefab;

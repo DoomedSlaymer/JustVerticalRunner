@@ -2,6 +2,9 @@
 
 public class DifficultyCalculator : MonoBehaviour
 {
+    /// <summary>
+    /// 2 скрипт на расчёт сложности :D
+    /// </summary>
     [SerializeField] public float difficultyCurvePower = 1.5f; // ✅ public
 
     public float CalculateSpeedMultiplier(float gameTime)

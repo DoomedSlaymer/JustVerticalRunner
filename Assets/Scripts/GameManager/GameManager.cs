@@ -5,6 +5,9 @@ public enum GameState { Menu, Playing, Paused, GameOver }
 
 public class GameManager : MonoBehaviour
 {
+    /// <summary>
+    /// добавляет State неиспользуемые, их некоторая связка всех остальных скриптов
+    /// </summary>
     public static GameManager Instance { get; private set; }
 
     [Header("ИГРОВЫЕ СИСТЕМЫ")]

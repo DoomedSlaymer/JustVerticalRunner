@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerInputBuffer : MonoBehaviour
 {
+    /// <summary>
+    /// буффер обновляется каждый кадр
+    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
     [SerializeField] private PlayerMovement movement;

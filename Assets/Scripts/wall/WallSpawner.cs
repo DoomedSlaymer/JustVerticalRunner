@@ -2,6 +2,9 @@
 
 public class WallSpawner : MonoBehaviour
 {
+    /// <summary>
+    /// берёт объекты из пулла, есть вопрос насчёт разделения пуллов и того как выглядят пуллы впринципе (pool, user pool)
+    /// </summary>
     [Header("Префабы стен")]
     [SerializeField] private GameObject leftWallPrefab;
     [SerializeField] private GameObject rightWallPrefab;
@@ -31,14 +34,14 @@ public class WallSpawner : MonoBehaviour
         SpawnInitialWalls();
     }
 
-    private void Update()
+    private void Update() 
     {
         SpawnWalls();
         MoveWallsDown();
         CleanupWalls();
     }
 
-    private void MoveWallsDown()
+    private void MoveWallsDown() //определяет стены для движения, имеющие скрипт движения
     {
         WallMover[] walls = FindObjectsOfType<WallMover>();
         foreach (WallMover wall in walls)
@@ -48,7 +51,7 @@ public class WallSpawner : MonoBehaviour
         }
     }
 
-    private void SpawnInitialWalls()
+    private void SpawnInitialWalls() // инициализирует стены в начале сцены, но багованно они накладываются друг на друга
     {
         for (int i = 0; i < initialWallsCount; i++)
         {
@@ -57,7 +60,7 @@ public class WallSpawner : MonoBehaviour
         }
     }
 
-    private void SpawnWallPairAtY(float yPosition)
+    private void SpawnWallPairAtY(float yPosition) // объеденяет спавн стен
     {
         CreateLeftWallAtY(yPosition);
         CreateRightWallAtY(yPosition);

@@ -2,6 +2,9 @@
 
 public class PlayerController : MonoBehaviour
 {
+    /// <summary>
+    /// НЕ УДАЛЁННАЯ СТАРАЯ ВЕРСИЯ (НЕ ИСПОЛЬЗУЕТСЯ!)
+    /// </summary>
     [Header("Позиции")]
     public float leftWallX = -4f;
     public float rightWallX = 4f;

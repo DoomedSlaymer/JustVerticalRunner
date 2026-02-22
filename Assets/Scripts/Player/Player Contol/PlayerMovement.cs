@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    /// <summary>
+    /// обывчный скрипт на движение, сдеална плавность
+    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
 

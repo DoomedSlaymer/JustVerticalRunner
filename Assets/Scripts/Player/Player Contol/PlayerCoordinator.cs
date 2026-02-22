@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlayerCoordinator : MonoBehaviour
 {
+    /// <summary>
+    /// связка всех скриптов
+    /// </summary>
     [SerializeField] private PlayerConfig config;
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerMovement movement;

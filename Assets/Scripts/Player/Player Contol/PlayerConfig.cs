@@ -1,5 +1,7 @@
 using UnityEngine;
-
+/// <summary>
+/// конфиг характеристик игрока, считаю излишним
+/// </summary>
 public class PlayerConfig : MonoBehaviour
 {
     [Header("Позиции")]
