@@ -1,22 +1,29 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
+п»їusing UnityEngine;
 
 public class SpikeDeath : MonoBehaviour
 {
-    //[SerializeField] private float restartDelay = 1f; // Задержка перед рестартом
+    [Header("Game Over")]
+    [SerializeField] private GameObject gameOverPanel;
+
+    private bool hasKilledPlayer = false;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Проверяем, что коснулся игрок (тег "Player")
-        if (other.CompareTag("Player"))
+        // РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ РєРѕСЃРЅСѓР»СЃСЏ РёРіСЂРѕРє (С‚РµРі "Player")
+        if (other.CompareTag("Player") && !hasKilledPlayer)
         {
-            RestartGame();
+            Die(other.gameObject);
         }
     }
 
-    void RestartGame()
+    void Die(GameObject player)
     {
-        // Перезапуск текущей сцены
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Destroy(player);
+        hasKilledPlayer = true;
+
+        // вњ… РўР•РџР•Р Р¬ С‡РµСЂРµР· GameManager!
+        GameManager.Instance.ShowGameOverUI();
+        GameManager.Instance.SetState(GameState.Paused);
     }
 }
+
