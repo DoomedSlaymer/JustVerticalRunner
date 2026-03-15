@@ -4,6 +4,7 @@ public class DifficultyApplier : MonoBehaviour
 {
 /// <summary>
 /// скрипт берёт часть из DifficultyManager. Ошибко
+/// не ОШИБКА, потому что выше указанный скрипт не используется. я уже путаюсь
 /// </summary>
     [SerializeField] private GameTimer gameTimer;
     [SerializeField] private DifficultyCalculator calculator;

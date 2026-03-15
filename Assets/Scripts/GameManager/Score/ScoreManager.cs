@@ -43,7 +43,11 @@ public class ScoreManager : MonoBehaviour
     {
         if (cachedScoreText != null)
             cachedScoreText.text = $"SCORE\n{Mathf.FloorToInt(currentScore):N0}";
+
+        // ✅ ✅ ✅ ПРАВИЛЬНО! float передается в DayNightCycle
+        DayNightCycle.Instance?.UpdateScore(currentScore);
     }
+
 
     public void AddPoints(float points)
     {
