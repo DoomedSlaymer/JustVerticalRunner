@@ -1,21 +1,49 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class DifficultyCalculator : MonoBehaviour
 {
-    /// <summary>
-    /// 2 скрипт на расчёт сложности :D
-    /// </summary>
-    [SerializeField] public float difficultyCurvePower = 1.5f; // ✅ public
+    [Header("Speed By Score")]
+    [SerializeField] private float scoreForMaxSpeed = 220f;
+    [SerializeField] private float minSpeedMultiplier = 1f;
+    [SerializeField] private float maxSpeedMultiplier = 2.35f;
+    [SerializeField] private float speedRampPower = 0.8f;
 
-    public float CalculateSpeedMultiplier(float gameTime)
+    [Header("Spike Spawn By Score")]
+    [SerializeField] private float scoreForMinSpawnInterval = 220f;
+    [SerializeField] private float maxSpawnMultiplier = 1.2f;
+    [SerializeField] private float minSpawnMultiplier = 0.55f;
+    [SerializeField] private float spawnRampPower = 0.72f;
+
+    public float CalculateSpeedMultiplier(float score)
     {
-        float normalizedTime = gameTime / 60f;
-        return Mathf.Clamp(Mathf.Pow(1.3f, normalizedTime * difficultyCurvePower), 1f, 3f);
+        float progress = GetProgress(score, scoreForMaxSpeed, speedRampPower);
+        return Mathf.Lerp(minSpeedMultiplier, maxSpeedMultiplier, progress);
     }
 
-    public float CalculateSpawnMultiplier(float gameTime)
+    public float CalculateSpawnMultiplier(float score)
     {
-        float normalizedTime = gameTime / 60f;
-        return Mathf.Clamp(Mathf.Pow(0.85f, normalizedTime * difficultyCurvePower), 0.3f, 1f);
+        float progress = GetProgress(score, scoreForMinSpawnInterval, spawnRampPower);
+        return Mathf.Lerp(maxSpawnMultiplier, minSpawnMultiplier, progress);
+    }
+
+    private float GetProgress(float score, float targetScore, float rampPower)
+    {
+        if (targetScore <= 0f)
+            return 1f;
+
+        float normalized = Mathf.Clamp01(score / targetScore);
+        float curved = Mathf.Pow(normalized, Mathf.Max(0.01f, rampPower));
+        return Mathf.SmoothStep(0f, 1f, curved);
+    }
+
+    private void OnValidate()
+    {
+        maxSpeedMultiplier = Mathf.Max(maxSpeedMultiplier, minSpeedMultiplier);
+        maxSpawnMultiplier = Mathf.Max(maxSpawnMultiplier, minSpawnMultiplier);
+        minSpawnMultiplier = Mathf.Clamp(minSpawnMultiplier, 0.2f, maxSpawnMultiplier);
+        scoreForMaxSpeed = Mathf.Max(1f, scoreForMaxSpeed);
+        scoreForMinSpawnInterval = Mathf.Max(1f, scoreForMinSpawnInterval);
+        speedRampPower = Mathf.Max(0.01f, speedRampPower);
+        spawnRampPower = Mathf.Max(0.01f, spawnRampPower);
     }
 }

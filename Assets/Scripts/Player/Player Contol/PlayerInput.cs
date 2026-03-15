@@ -2,33 +2,41 @@ using UnityEngine;
 
 public class PlayerInput : MonoBehaviour
 {
-    /// <summary>
-    /// отвечает за ввод состояение буффера
-    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
     [SerializeField] private PlayerMovement movement;
 
-    void Update()
+    private void Update()
     {
         HandleInput();
     }
 
-    void HandleInput()
+    private void HandleInput()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !state.IsMoving)
+        if (!WasMovePressed())
+            return;
+
+        if (GameManager.Instance?.CurrentState == GameState.WaitingToStart)
+            GameManager.Instance.StartGameplay();
+
+        if (GameManager.Instance?.CurrentState != GameState.Playing)
+            return;
+
+        if (!state.IsMoving)
         {
             movement.MoveToOppositeWall();
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && state.IsMoving)
-        {
-            BufferInput();
-        }
+        BufferInput();
     }
 
-    void BufferInput()
+    private bool WasMovePressed()
+    {
+        return Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0);
+    }
+
+    private void BufferInput()
     {
         state.SetInputBuffered(true);
         state.SetLastInputTime(Time.time);

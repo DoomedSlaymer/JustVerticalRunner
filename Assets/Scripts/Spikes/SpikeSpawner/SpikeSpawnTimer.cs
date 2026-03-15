@@ -5,28 +5,34 @@ public class SpikeSpawnTimer : MonoBehaviour
     [SerializeField] private float baseMinInterval = 0.75f;
     [SerializeField] private float baseMaxInterval = 1.5f;
 
-    private float currentMinInterval;
-    private float currentMaxInterval;
     private float timer;
 
     public bool ShouldSpawn => timer <= 0f;
-    public void ResetTimer() => timer = Random.Range(currentMinInterval, currentMaxInterval);
 
-    void Start()
+    public void ResetTimer()
     {
-        currentMinInterval = baseMinInterval;
-        currentMaxInterval = baseMaxInterval;
+        DifficultyApplier.Instance?.RefreshDifficulty();
+
+        float spawnMultiplier = DifficultyApplier.Instance != null
+            ? DifficultyApplier.Instance.CurrentSpawnMultiplier
+            : 1f;
+
+        float minInterval = Mathf.Max(baseMinInterval * spawnMultiplier, 0.25f);
+        float maxInterval = Mathf.Max(baseMaxInterval * spawnMultiplier, minInterval + 0.05f);
+
+        timer = Random.Range(minInterval, maxInterval);
+    }
+
+    private void Start()
+    {
         ResetTimer();
     }
 
-    void Update()
+    private void Update()
     {
-        timer -= Time.deltaTime;
-    }
+        if (GameManager.Instance?.CurrentState != GameState.Playing)
+            return;
 
-    public void UpdateRates(float multiplier)
-    {
-        currentMinInterval = Mathf.Max(baseMinInterval * multiplier, 0.2f);
-        currentMaxInterval = Mathf.Max(baseMaxInterval * multiplier, 0.4f);
+        timer -= Time.deltaTime;
     }
 }

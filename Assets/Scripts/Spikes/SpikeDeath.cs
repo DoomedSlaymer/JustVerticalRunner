@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class SpikeDeath : MonoBehaviour
 {
@@ -9,21 +9,18 @@ public class SpikeDeath : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Проверяем, что коснулся игрок (тег "Player")
         if (other.CompareTag("Player") && !hasKilledPlayer)
         {
             Die(other.gameObject);
         }
     }
 
-    void Die(GameObject player)
+    private void Die(GameObject player)
     {
         Destroy(player);
         hasKilledPlayer = true;
 
-        // ✅ ТЕПЕРЬ через GameManager!
         GameManager.Instance.ShowGameOverUI();
-        GameManager.Instance.SetState(GameState.Paused);
+        GameManager.Instance.SetState(GameState.GameOver);
     }
 }
-

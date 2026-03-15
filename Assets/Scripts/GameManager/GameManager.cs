@@ -1,13 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum GameState { Menu, Playing, Paused, GameOver }
+public enum GameState { Menu, WaitingToStart, Playing, Paused, GameOver }
 
 public class GameManager : MonoBehaviour
 {
-    /// <summary>
-    /// добавляет State неиспользуемые, их некоторая связка всех остальных скриптов
-    /// </summary>
     public static GameManager Instance { get; private set; }
 
     [Header("ИГРОВЫЕ СИСТЕМЫ")]
@@ -18,10 +15,11 @@ public class GameManager : MonoBehaviour
 
     [Header("GAME OVER UI")]
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameOverUIManager gameOverUIManager;
 
     public GameState CurrentState { get; private set; } = GameState.Menu;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -33,58 +31,65 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    void Start()
+    private void Start()
     {
-        SetState(GameState.Playing);
+        SetState(GameState.WaitingToStart);
     }
 
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // ✅ 1. Ждём 1 кадр для полной инициализации
         Invoke(nameof(InitializeAfterLoad), 0.1f);
     }
 
-    void InitializeAfterLoad()
+    private void InitializeAfterLoad()
     {
-        // ✅ 2. СБРОС
         ResetGameplay();
-
-        // ✅ 3. Поиск UI
         FindUITextComponents();
-        HideGameOverUI(); // ✅ СКРЫВАЕМ при старте
-
-        // ✅ 4. Запуск игры
-        SetState(GameState.Playing);
+        HideGameOverUI();
+        SetState(GameState.WaitingToStart);
     }
 
-    void FindUITextComponents()
+    private void FindUITextComponents()
     {
-        if (scoreManager != null) scoreManager.FindUIText();
-        if (highScoreManager != null) highScoreManager.FindUIText();
+        if (scoreManager != null)
+            scoreManager.FindUIText();
+
+        if (highScoreManager != null)
+            highScoreManager.FindUIText();
     }
 
-    /// ✅ НОВЫЙ МЕТОД: Показать GameOver UI
     public void ShowGameOverUI()
     {
+        GameOverUIManager uiManager = ResolveGameOverUIManager();
+        if (uiManager != null)
+        {
+            uiManager.ShowGameOver();
+            return;
+        }
+
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
-
-        Debug.Log("📱 GameOver UI показан");
     }
 
-    /// ✅ НОВЫЙ МЕТОД: Спрятать GameOver UI
     public void HideGameOverUI()
     {
+        GameOverUIManager uiManager = ResolveGameOverUIManager();
+        if (uiManager != null)
+        {
+            uiManager.HideGameOver();
+            return;
+        }
+
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
     }
@@ -95,43 +100,72 @@ public class GameManager : MonoBehaviour
         OnStateChanged(newState);
     }
 
-    void OnStateChanged(GameState newState)
+    public void StartGameplay()
+    {
+        if (CurrentState == GameState.WaitingToStart)
+            SetState(GameState.Playing);
+    }
+
+    private void OnStateChanged(GameState newState)
     {
         switch (newState)
         {
+            case GameState.WaitingToStart:
+                Time.timeScale = 1f;
+                HideGameOverUI();
+                break;
             case GameState.Playing:
                 Time.timeScale = 1f;
-                HideGameOverUI(); // ✅ Прятать меню при игре
+                HideGameOverUI();
                 break;
             case GameState.Paused:
                 Time.timeScale = 1f;
                 break;
             case GameState.GameOver:
-                Time.timeScale = 0f;
+                Time.timeScale = 1f;
+                ShowGameOverUI();
                 break;
         }
     }
 
-    void ResetGameplay()
+    private void ResetGameplay()
     {
-        if (scoreManager != null) scoreManager.ResetScore();
-        if (gameTimer != null) gameTimer.ResetTime();
+        if (scoreManager != null)
+            scoreManager.ResetScore();
+
+        if (gameTimer != null)
+            gameTimer.ResetTime();
     }
 
     public void RestartGame()
     {
-        // ✅ 1. Сразу ставим Playing для корректной инициализации
-        SetState(GameState.Playing);
-
-        // ✅ 2. Ждём кадр, затем рестарт
+        SetState(GameState.WaitingToStart);
         Invoke(nameof(DoSceneRestart), 0.05f);
     }
 
-    void DoSceneRestart()
+    private void DoSceneRestart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public float GameTime => gameTimer?.gameTime ?? 0f;
     public float GetCurrentScore() => scoreManager?.Score ?? 0f;
+
+    private GameOverUIManager ResolveGameOverUIManager()
+    {
+        if (gameOverUIManager != null)
+            return gameOverUIManager;
+
+        if (gameOverPanel != null)
+        {
+            gameOverUIManager = gameOverPanel.GetComponent<GameOverUIManager>();
+            if (gameOverUIManager == null)
+                gameOverUIManager = gameOverPanel.GetComponentInChildren<GameOverUIManager>(true);
+        }
+
+        if (gameOverUIManager == null)
+            gameOverUIManager = FindObjectOfType<GameOverUIManager>(true);
+
+        return gameOverUIManager;
+    }
 }

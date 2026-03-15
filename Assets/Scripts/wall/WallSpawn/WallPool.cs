@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class WallPool : MonoBehaviour
 {
@@ -12,14 +12,28 @@ public class WallPool : MonoBehaviour
     }
 
     [SerializeField] private WallPoolItem[] pools;
+
     private Dictionary<GameObject, Queue<GameObject>> poolDictionary;
+    private Dictionary<GameObject, GameObject> prefabByInstance;
 
-    void Start()
+    private void Awake()
     {
-        poolDictionary = new Dictionary<GameObject, Queue<GameObject>>();
+        InitializePools();
+    }
 
-        foreach (var pool in pools)
+    private void InitializePools()
+    {
+        if (poolDictionary != null)
+            return;
+
+        poolDictionary = new Dictionary<GameObject, Queue<GameObject>>();
+        prefabByInstance = new Dictionary<GameObject, GameObject>();
+
+        foreach (WallPoolItem pool in pools)
         {
+            if (pool.prefab == null)
+                continue;
+
             Queue<GameObject> objectPool = new Queue<GameObject>();
 
             for (int i = 0; i < pool.poolSize; i++)
@@ -27,6 +41,7 @@ public class WallPool : MonoBehaviour
                 GameObject obj = Instantiate(pool.prefab);
                 obj.SetActive(false);
                 objectPool.Enqueue(obj);
+                prefabByInstance[obj] = pool.prefab;
             }
 
             poolDictionary.Add(pool.prefab, objectPool);
@@ -35,9 +50,15 @@ public class WallPool : MonoBehaviour
 
     public GameObject SpawnFromPool(GameObject prefab, Vector3 pos, Quaternion rot)
     {
+        if (poolDictionary == null)
+            InitializePools();
+
+        if (prefab == null)
+            return null;
+
         if (!poolDictionary.ContainsKey(prefab))
         {
-            Debug.LogWarning("Нет пула для " + prefab.name);
+            Debug.LogWarning("WallPool: no pool configured for " + prefab.name, this);
             return null;
         }
 
@@ -50,9 +71,14 @@ public class WallPool : MonoBehaviour
         }
         else if (pools[GetPoolIndex(prefab)].autoExpand)
         {
+            Debug.LogWarning("WallPool: pool expanded for " + prefab.name, this);
             objToSpawn = Instantiate(prefab);
+            prefabByInstance[objToSpawn] = prefab;
         }
-        else return null;
+        else
+        {
+            return null;
+        }
 
         objToSpawn.SetActive(true);
         objToSpawn.transform.SetPositionAndRotation(pos, rot);
@@ -63,14 +89,22 @@ public class WallPool : MonoBehaviour
 
     public void ReturnToPool(GameObject obj)
     {
+        if (obj == null || !prefabByInstance.TryGetValue(obj, out GameObject prefabKey))
+            return;
+
         obj.SetActive(false);
         obj.transform.SetParent(transform);
+        poolDictionary[prefabKey].Enqueue(obj);
     }
 
-    int GetPoolIndex(GameObject prefab)
+    private int GetPoolIndex(GameObject prefab)
     {
         for (int i = 0; i < pools.Length; i++)
-            if (pools[i].prefab == prefab) return i;
+        {
+            if (pools[i].prefab == prefab)
+                return i;
+        }
+
         return 0;
     }
 }

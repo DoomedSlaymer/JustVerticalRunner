@@ -1,35 +1,54 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class DifficultyApplier : MonoBehaviour
 {
-/// <summary>
-/// скрипт берёт часть из DifficultyManager. Ошибко
-/// не ОШИБКА, потому что выше указанный скрипт не используется. я уже путаюсь
-/// </summary>
-    [SerializeField] private GameTimer gameTimer;
+    public static DifficultyApplier Instance { get; private set; }
+
+    [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private DifficultyCalculator calculator;
-    [SerializeField] private SpikeSpawnTimer spawnerTimer; // ✅ Изменено!
 
-    private float speedMultiplier;
-    private float spawnRateMultiplier;
+    public float CurrentSpeedMultiplier { get; private set; } = 1f;
+    public float CurrentSpawnMultiplier { get; private set; } = 1f;
 
-    void Update()
+    private void Awake()
     {
-        if (GameManager.Instance?.CurrentState != GameState.Playing) return;
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-        float normalizedTime = gameTimer.gameTime / 60f;
-        speedMultiplier = Mathf.Pow(1.3f, normalizedTime * calculator.difficultyCurvePower);
-        spawnRateMultiplier = Mathf.Pow(0.85f, normalizedTime * calculator.difficultyCurvePower);
+        if (scoreManager == null)
+            scoreManager = FindObjectOfType<ScoreManager>();
 
-        speedMultiplier = Mathf.Clamp(speedMultiplier, 1f, 3f);
-        spawnRateMultiplier = Mathf.Clamp(spawnRateMultiplier, 0.3f, 1f);
+        if (calculator == null)
+            calculator = FindObjectOfType<DifficultyCalculator>();
 
-        // ✅ ПРЯМО к SpikeSpawnTimer
-        if (spawnerTimer != null)
-            spawnerTimer.UpdateRates(spawnRateMultiplier);
-
-        Debug.Log($"⏱️ {gameTimer.gameTime:F1}s | ⚡ {speedMultiplier:F2}x | ⏱️ {spawnRateMultiplier:F2}x");
+        RefreshDifficulty();
     }
 
-    public float GetCurrentSpeedMultiplier() => speedMultiplier;
+    private void Update()
+    {
+        if (calculator == null)
+            return;
+
+        RefreshDifficulty();
+    }
+
+    public void RefreshDifficulty()
+    {
+        if (calculator == null)
+            return;
+
+        float currentScore = scoreManager != null ? scoreManager.Score : 0f;
+        CurrentSpeedMultiplier = calculator.CalculateSpeedMultiplier(currentScore);
+        CurrentSpawnMultiplier = calculator.CalculateSpawnMultiplier(currentScore);
+    }
+
+    public float GetCurrentSpeedMultiplier() => CurrentSpeedMultiplier;
+    public float GetCurrentSpawnMultiplier() => CurrentSpawnMultiplier;
 }

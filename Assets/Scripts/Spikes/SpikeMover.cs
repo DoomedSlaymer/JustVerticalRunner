@@ -1,36 +1,24 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class SpikeMover : MonoBehaviour
 {
-    [Header("БАЗОВЫЕ ПАРАМЕТРЫ")]
     [SerializeField] private float baseSpeed = 5f;
-
-    [Header("ДИНАМИЧЕСКИЕ")]
-    private float currentSpeed;
-
-    [Header("УДАЛЕНИЕ")]
     [SerializeField] private float destroyBelowY = -20f;
 
-    void Start()
+    private void Update()
     {
-        currentSpeed = baseSpeed;
-    }
+        if (GameManager.Instance?.CurrentState != GameState.Playing)
+            return;
 
-    // ✅ ПУБЛИЧНЫЙ метод для изменения скорости
-    public void UpdateSpeed(float multiplier)
-    {
-        currentSpeed = baseSpeed * multiplier;
-    }
+        float speedMultiplier = DifficultyApplier.Instance != null
+            ? DifficultyApplier.Instance.CurrentSpeedMultiplier
+            : 1f;
 
-    void Update()
-    {
         Vector3 pos = transform.position;
-        pos.y -= currentSpeed * Time.deltaTime; // ✅ Используем currentSpeed
+        pos.y -= baseSpeed * speedMultiplier * Time.deltaTime;
         transform.position = pos;
 
         if (pos.y < destroyBelowY)
-        {
-            Destroy(gameObject);
-        }
+            gameObject.SetActive(false);
     }
 }

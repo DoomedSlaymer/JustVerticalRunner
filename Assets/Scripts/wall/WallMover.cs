@@ -2,11 +2,8 @@ using UnityEngine;
 
 public class WallMover : MonoBehaviour
 {
-    /// <summary>
-    ///  скрипт движения стен, удаляет при позиции ниже указанной
-    /// </summary>
-    private float speed;           // Скорость движения вниз
-    private float destroyY;        // Граница удаления
+    private float speed;
+    private float destroyY;
 
     public void Initialize(float wallSpeed, float destroyYPosition)
     {
@@ -14,16 +11,18 @@ public class WallMover : MonoBehaviour
         destroyY = destroyYPosition;
     }
 
+    public void SetSpeed(float wallSpeed)
+    {
+        speed = wallSpeed;
+    }
+
     public void MoveDown()
     {
         transform.Translate(Vector3.down * speed * Time.deltaTime);
     }
 
-    private void Update()
+    public bool IsBelowDestroyY()
     {
-        if (transform.position.y < destroyY)
-        {
-            Destroy(gameObject);
-        }
+        return transform.position.y < destroyY;
     }
 }

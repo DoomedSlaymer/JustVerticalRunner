@@ -1,10 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class SpikeSpawner : MonoBehaviour
 {
-    /// <summary>
-    /// использует префабы (вероятно не нужно) спавнит шипы из пулла, и использует логику из sideselector и prefabside
-    /// </summary>
     [Header("Префабы")]
     [SerializeField] private GameObject spikePrefab;
     [SerializeField] private GameObject fastSpikePrefab;
@@ -19,68 +16,94 @@ public class SpikeSpawner : MonoBehaviour
     [SerializeField] private float oppositeSideBoost = 0.7f;
 
     [Header("Таймер")]
-    [SerializeField] private float baseMinInterval = 0.75f;
-    [SerializeField] private float baseMaxInterval = 1.5f;
+    [SerializeField] private SpikeSpawnTimer spawnTimer;
 
-    private float currentMinInterval;
-    private float currentMaxInterval;
-    private float timer;
     private SpikeSpawnSideSelector sideSelector;
     private SpikePrefabSelector prefabSelector;
     private SpikePool spikePool;
+    private bool hasLoggedMissingPool;
 
-    void Start()
+    private void Start()
     {
-        currentMinInterval = baseMinInterval;
-        currentMaxInterval = baseMaxInterval;
-        timer = Random.Range(currentMinInterval, currentMaxInterval);
+        if (spawnTimer == null)
+            spawnTimer = GetComponent<SpikeSpawnTimer>();
 
-        sideSelector = gameObject.AddComponent<SpikeSpawnSideSelector>();
-        prefabSelector = gameObject.AddComponent<SpikePrefabSelector>();
+        if (spawnTimer == null)
+        {
+            spawnTimer = gameObject.AddComponent<SpikeSpawnTimer>();
+            //Debug.LogWarning("SpikeSpawner: SpikeSpawnTimer не найден, компонент добавлен автоматически.", this);
+        }
+
+        sideSelector = GetComponent<SpikeSpawnSideSelector>();
+        if (sideSelector == null)
+            sideSelector = gameObject.AddComponent<SpikeSpawnSideSelector>();
+
+        prefabSelector = GetComponent<SpikePrefabSelector>();
+        if (prefabSelector == null)
+            prefabSelector = gameObject.AddComponent<SpikePrefabSelector>();
 
         sideSelector.SetSpawnerData(leftWallX, rightWallX, oppositeSideBoost);
         prefabSelector.SetSpawnerData(spikePrefab, fastSpikePrefab, doubleSpikePrefab);
 
-        // ✅ НАЙТИ ПУЛ
         spikePool = FindObjectOfType<SpikePool>();
+        ValidateConfiguration();
     }
 
-    void Update()
+    private void Update()
     {
-        if (GameManager.Instance?.CurrentState != GameState.Playing) return;
+        if (GameManager.Instance?.CurrentState != GameState.Playing || spawnTimer == null)
+            return;
 
-        timer -= Time.deltaTime;
-        if (timer <= 0f)
+        if (spawnTimer.ShouldSpawn)
         {
             SpawnRandomSpike();
-            timer = Random.Range(currentMinInterval, currentMaxInterval);
+            spawnTimer.ResetTimer();
         }
     }
 
-    void SpawnRandomSpike()
+    private void SpawnRandomSpike()
     {
         GameObject prefab = prefabSelector.GetRandomPrefab();
+        if (prefab == null)
+        {
+            Debug.LogWarning("SpikeSpawner: не назначен один из spike prefab, спавн пропущен.", this);
+            return;
+        }
+
         var (x, rotation) = sideSelector.GetSpawnPosition();
 
-        Vector3 pos = new Vector3(x, spawnY, 0);
+        Vector3 pos = new Vector3(x, spawnY, 0f);
 
-        // ✅ ИЗМЕНЕНО: Pool вместо Instantiate
         if (spikePool != null)
         {
-            GameObject spike = spikePool.SpawnFromPool(prefab, pos, Quaternion.Euler(0, 0, rotation));
+            GameObject spike = spikePool.SpawnFromPool(prefab, pos, Quaternion.Euler(0f, 0f, rotation));
             if (spike != null)
+            {
                 spike.transform.SetParent(transform);
+            }
+            else
+            {
+                Debug.LogWarning($"SpikeSpawner: пул не смог выдать объект для {prefab.name}. Проверь pools в SpikePool.", this);
+            }
         }
         else
         {
-            // Fallback
-            Instantiate(prefab, pos, Quaternion.Euler(0, 0, rotation), transform);
+            if (!hasLoggedMissingPool)
+            {
+                hasLoggedMissingPool = true;
+                Debug.LogWarning("SpikeSpawner: SpikePool не найден, используется Instantiate.", this);
+            }
+
+            Instantiate(prefab, pos, Quaternion.Euler(0f, 0f, rotation), transform);
         }
     }
 
-    public void UpdateSpawnRates(float multiplier)
+    private void ValidateConfiguration()
     {
-        currentMinInterval = Mathf.Max(baseMinInterval * multiplier, 0.2f);
-        currentMaxInterval = Mathf.Max(baseMaxInterval * multiplier, 0.4f);
+        if (spikePrefab == null || fastSpikePrefab == null || doubleSpikePrefab == null)
+            Debug.LogWarning("SpikeSpawner: назначены не все spike prefab.", this);
+
+        if (spikePool == null)
+            Debug.LogWarning("SpikeSpawner: SpikePool не найден на сцене.", this);
     }
 }

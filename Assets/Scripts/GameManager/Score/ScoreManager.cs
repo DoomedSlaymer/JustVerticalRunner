@@ -51,7 +51,7 @@ public class ScoreManager : MonoBehaviour
 
     public void AddPoints(float points)
     {
-        currentScore += points;
+        currentScore += points * 2;
         UpdateUI();
     }
 

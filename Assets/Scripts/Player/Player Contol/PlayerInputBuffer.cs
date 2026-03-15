@@ -2,20 +2,20 @@ using UnityEngine;
 
 public class PlayerInputBuffer : MonoBehaviour
 {
-    /// <summary>
-    /// буффер обновляется каждый кадр
-    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
     [SerializeField] private PlayerMovement movement;
 
-    void Update()
+    private void Update()
     {
         UpdateBuffer();
     }
 
-    void UpdateBuffer()
+    private void UpdateBuffer()
     {
+        if (GameManager.Instance?.CurrentState != GameState.Playing)
+            return;
+
         if (state.InputBuffered && !state.IsMoving &&
             Time.time - state.LastInputTime <= config.InputBufferTime)
         {

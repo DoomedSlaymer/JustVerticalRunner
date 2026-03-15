@@ -1,138 +1,206 @@
-﻿using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class WallSpawner : MonoBehaviour
 {
-    /// <summary>
-    /// берёт объекты из пулла, есть вопрос насчёт разделения пуллов и того как выглядят пуллы впринципе (pool, user pool)
-    /// </summary>
-    [Header("Префабы стен")]
+    [Header("Wall Prefabs")]
     [SerializeField] private GameObject leftWallPrefab;
     [SerializeField] private GameObject rightWallPrefab;
 
-    [Header("Позиции спавна (координата X)")]
+    [Header("Spawn Positions")]
     [SerializeField] private float leftWallX = -8f;
     [SerializeField] private float rightWallX = 8f;
-
-    [Header("Параметры спавна")]
     [SerializeField] private float spawnY = 12f;
-    [SerializeField] private float spawnInterval = 3f;
-    [SerializeField] private int initialWallsCount = 3;
 
-    [Header("Движение")]
+    [Header("Spawn Layout")]
+    [SerializeField] private int initialWallsCount = 3;
+    [SerializeField] private float wallSpacingMultiplier = 1f;
+    [SerializeField] private float extraWallSpacing = 0f;
+    [SerializeField] private float wallOverlap = 0.15f;
+
+    [Header("Movement")]
     [SerializeField] private float wallSpeed = 5f;
 
-    [Header("Границы экрана")]
+    [Header("Bounds")]
     [SerializeField] private float destroyY = -12f;
 
-    private float spawnTimer;
-    private WallPool wallPool; // ✅ НОВОЕ!
+    private readonly List<WallMover> activeWalls = new List<WallMover>();
+    private WallPool wallPool;
+    private float wallPairSpacing;
+    private bool hasLoggedPoolFallback;
 
-    void Start()
+    private void Start()
     {
-        spawnTimer = spawnInterval;
-        wallPool = FindObjectOfType<WallPool>(); // ✅ НАЙТИ ПУЛ
+        wallPool = FindObjectOfType<WallPool>();
+        wallPairSpacing = CalculateWallPairSpacing();
         SpawnInitialWalls();
     }
 
-    private void Update() 
+    private void Update()
     {
-        SpawnWalls();
+        if (GameManager.Instance?.CurrentState != GameState.Playing)
+            return;
+
         MoveWallsDown();
-        CleanupWalls();
+        SpawnWallsIfNeeded();
     }
 
-    private void MoveWallsDown() //определяет стены для движения, имеющие скрипт движения
-    {
-        WallMover[] walls = FindObjectsOfType<WallMover>();
-        foreach (WallMover wall in walls)
-        {
-            if (wall != null)
-                wall.MoveDown();
-        }
-    }
-
-    private void SpawnInitialWalls() // инициализирует стены в начале сцены, но багованно они накладываются друг на друга
+    private void SpawnInitialWalls()
     {
         for (int i = 0; i < initialWallsCount; i++)
         {
-            float offsetY = i * spawnInterval;
-            SpawnWallPairAtY(spawnY - offsetY);
+            SpawnWallPairAtY(spawnY - (i * wallPairSpacing));
         }
     }
 
-    private void SpawnWallPairAtY(float yPosition) // объеденяет спавн стен
+    private void SpawnWallsIfNeeded()
     {
-        CreateLeftWallAtY(yPosition);
-        CreateRightWallAtY(yPosition);
-    }
-
-    private void SpawnWalls()
-    {
-        spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0f)
+        while (ShouldSpawnNextPair())
         {
             SpawnWallPairAtY(spawnY);
-            spawnTimer = spawnInterval;
         }
     }
 
-    private void CreateLeftWallAtY(float yPosition)
+    private bool ShouldSpawnNextPair()
     {
-        if (leftWallPrefab != null)
+        float highestWallY = float.MinValue;
+
+        for (int i = activeWalls.Count - 1; i >= 0; i--)
         {
-            Vector3 position = new Vector3(leftWallX, yPosition, 0f);
+            WallMover wall = activeWalls[i];
+            if (wall == null || !wall.gameObject.activeInHierarchy)
+            {
+                activeWalls.RemoveAt(i);
+                continue;
+            }
 
-            // ✅ Pool вместо Instantiate!
-            GameObject leftWall;
-            if (wallPool != null)
-            {
-                leftWall = wallPool.SpawnFromPool(leftWallPrefab, position, Quaternion.identity);
-                if (leftWall != null)
-                {
-                    WallMover leftMover = leftWall.GetComponent<WallMover>();
-                    if (leftMover != null) leftMover.Initialize(wallSpeed, destroyY);
-                }
-            }
-            else
-            {
-                // Fallback
-                leftWall = Instantiate(leftWallPrefab, position, Quaternion.identity);
-                WallMover leftMover = leftWall.GetComponent<WallMover>() ?? leftWall.AddComponent<WallMover>();
-                leftMover.Initialize(wallSpeed, destroyY);
-            }
+            highestWallY = Mathf.Max(highestWallY, wall.transform.position.y);
         }
+
+        if (highestWallY == float.MinValue)
+            return true;
+
+        return spawnY - highestWallY >= wallPairSpacing;
     }
 
-    private void CreateRightWallAtY(float yPosition)
+    private void MoveWallsDown()
     {
-        if (rightWallPrefab != null)
+        float currentWallSpeed = GetCurrentWallSpeed();
+
+        for (int i = activeWalls.Count - 1; i >= 0; i--)
         {
-            Vector3 position = new Vector3(rightWallX, yPosition, 0f);
-
-            // ✅ Pool вместо Instantiate!
-            GameObject rightWall;
-            if (wallPool != null)
+            WallMover wall = activeWalls[i];
+            if (wall == null)
             {
-                rightWall = wallPool.SpawnFromPool(rightWallPrefab, position, Quaternion.identity);
-                if (rightWall != null)
-                {
-                    WallMover rightMover = rightWall.GetComponent<WallMover>();
-                    if (rightMover != null) rightMover.Initialize(wallSpeed, destroyY);
-                }
+                activeWalls.RemoveAt(i);
+                continue;
             }
-            else
+
+            wall.SetSpeed(currentWallSpeed);
+            wall.MoveDown();
+
+            if (wall.IsBelowDestroyY())
             {
-                // Fallback
-                rightWall = Instantiate(rightWallPrefab, position, Quaternion.identity);
-                WallMover rightMover = rightWall.GetComponent<WallMover>() ?? rightWall.AddComponent<WallMover>();
-                rightMover.Initialize(wallSpeed, destroyY);
+                activeWalls.RemoveAt(i);
+                ReturnWall(wall.gameObject);
             }
         }
     }
 
-    private void CleanupWalls()
+    private void SpawnWallPairAtY(float yPosition)
     {
-        // ✅ Pool НЕ использует Destroy - убрано!
-        // Стены сами возвращаются через WallPoolUser
+        CreateWall(leftWallPrefab, leftWallX, yPosition);
+        CreateWall(rightWallPrefab, rightWallX, yPosition);
+    }
+
+    private void CreateWall(GameObject prefab, float xPosition, float yPosition)
+    {
+        if (prefab == null)
+            return;
+
+        Vector3 position = new Vector3(xPosition, yPosition, 0f);
+        GameObject wallObject = null;
+
+        if (wallPool != null)
+            wallObject = wallPool.SpawnFromPool(prefab, position, Quaternion.identity);
+
+        if (wallObject == null)
+        {
+            if (wallPool != null && !hasLoggedPoolFallback)
+            {
+                hasLoggedPoolFallback = true;
+                Debug.LogWarning("WallSpawner: пул не выдал стену, используется Instantiate. Проверь pools и poolSize в WallPool.", this);
+            }
+
+            wallObject = Instantiate(prefab, position, Quaternion.identity);
+        }
+
+        WallMover mover = wallObject.GetComponent<WallMover>() ?? wallObject.AddComponent<WallMover>();
+        mover.Initialize(GetCurrentWallSpeed(), destroyY);
+        RegisterWall(mover);
+    }
+
+    private void RegisterWall(WallMover wall)
+    {
+        if (wall == null || activeWalls.Contains(wall))
+            return;
+
+        activeWalls.Add(wall);
+    }
+
+    private float GetCurrentWallSpeed()
+    {
+        float speedMultiplier = DifficultyApplier.Instance != null
+            ? DifficultyApplier.Instance.CurrentSpeedMultiplier
+            : 1f;
+
+        return wallSpeed * speedMultiplier;
+    }
+
+    private float CalculateWallPairSpacing()
+    {
+        float wallHeight = GetPrefabHeight(leftWallPrefab);
+        if (wallHeight <= 0f)
+            wallHeight = GetPrefabHeight(rightWallPrefab);
+
+        if (wallHeight <= 0f)
+            wallHeight = 3f;
+
+        float spacing = (wallHeight * wallSpacingMultiplier) + extraWallSpacing - wallOverlap;
+        return Mathf.Max(spacing, 0.1f);
+    }
+
+    private float GetPrefabHeight(GameObject prefab)
+    {
+        if (prefab == null)
+            return 0f;
+
+        SpriteRenderer spriteRenderer = prefab.GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null)
+            return spriteRenderer.bounds.size.y;
+
+        Collider2D collider2D = prefab.GetComponentInChildren<Collider2D>();
+        if (collider2D != null)
+            return collider2D.bounds.size.y;
+
+        Renderer renderer = prefab.GetComponentInChildren<Renderer>();
+        if (renderer != null)
+            return renderer.bounds.size.y;
+
+        return 0f;
+    }
+
+    private void ReturnWall(GameObject wallObject)
+    {
+        if (wallObject == null)
+            return;
+
+        if (wallPool != null)
+        {
+            wallPool.ReturnToPool(wallObject);
+            return;
+        }
+
+        wallObject.SetActive(false);
     }
 }

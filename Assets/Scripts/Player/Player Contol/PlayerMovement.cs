@@ -2,18 +2,15 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    /// <summary>
-    /// обывчный скрипт на движение, сдеална плавность
-    /// </summary>
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
 
-    void Update()
+    private void Update()
     {
         MoveToTarget();
     }
 
-    void MoveToTarget()
+    private void MoveToTarget()
     {
         float accel = GetAcceleration();
         state.SetVelocityX(GetNewVelocity(accel));
@@ -21,48 +18,55 @@ public class PlayerMovement : MonoBehaviour
         CheckArrival();
     }
 
-    float GetAcceleration()
+    private float GetAcceleration()
     {
         float time = state.IsMoving ? config.accelerationTime : config.decelerationTime;
-        return config.moveSpeed / time;
+        return GetCurrentMoveSpeed() / time;
     }
 
-    float GetNewVelocity(float acceleration)
+    private float GetNewVelocity(float acceleration)
     {
-        float targetVel = (state.TargetX - transform.position.x) * config.moveSpeed;
+        float targetVel = (state.TargetX - transform.position.x) * GetCurrentMoveSpeed();
         return Mathf.MoveTowards(state.VelocityX, targetVel, acceleration * Time.deltaTime);
     }
 
-    void ApplyVelocity()
+    private float GetCurrentMoveSpeed()
     {
-        transform.position += new Vector3(state.VelocityX * Time.deltaTime, 0, 0);
+        float difficultyMultiplier = DifficultyApplier.Instance != null
+            ? DifficultyApplier.Instance.CurrentSpeedMultiplier
+            : 1f;
+        float appliedMultiplier = Mathf.Lerp(1f, difficultyMultiplier, config.difficultySpeedInfluence);
+
+        return config.moveSpeed * appliedMultiplier;
     }
 
-    void CheckArrival()
+    private void ApplyVelocity()
+    {
+        transform.position += new Vector3(state.VelocityX * Time.deltaTime, 0f, 0f);
+    }
+
+    private void CheckArrival()
     {
         if (Mathf.Abs(transform.position.x - state.TargetX) < config.stopDistance)
-        {
             Arrive();
-        }
     }
 
-    void Arrive()
+    private void Arrive()
     {
         SetPositionX(state.TargetX);
-        state.SetVelocityX(0);
+        state.SetVelocityX(0f);
         state.SetIsMoving(false);
     }
 
-    void SetPositionX(float x)
+    private void SetPositionX(float x)
     {
         Vector3 pos = transform.position;
         transform.position = new Vector3(x, pos.y, pos.z);
     }
 
-    float GetOppositeX()
+    private float GetOppositeX()
     {
-        var config = GetComponent<PlayerConfig>();
-        return transform.position.x > 0 ? config.leftWallX : config.rightWallX;
+        return transform.position.x > 0f ? config.leftWallX : config.rightWallX;
     }
 
     public void MoveToOppositeWall()
