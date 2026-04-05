@@ -6746,6 +6746,8 @@ MonoBehaviour:
   menuButton: {fileID: 1687286123}
   showDuration: 0.3
   startScale: 0.9
+  interstitialEveryRestarts: 3
+  adCloseFallbackDelay: 1.5
 --- !u!1 &1719342508
 GameObject:
   m_ObjectHideFlags: 0

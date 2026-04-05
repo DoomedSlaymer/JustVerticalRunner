@@ -5,6 +5,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private PlayerState state;
     [SerializeField] private PlayerConfig config;
 
+    private const float MaxSimulationDelta = 0.05f;
+
     private void Update()
     {
         MoveToTarget();
@@ -12,22 +14,25 @@ public class PlayerMovement : MonoBehaviour
 
     private void MoveToTarget()
     {
+        float dt = Mathf.Min(Time.deltaTime, MaxSimulationDelta);
         float accel = GetAcceleration();
-        state.SetVelocityX(GetNewVelocity(accel));
-        ApplyVelocity();
+
+        state.SetVelocityX(GetNewVelocity(accel, dt));
+        ApplyVelocity(dt);
         CheckArrival();
     }
 
     private float GetAcceleration()
     {
         float time = state.IsMoving ? config.accelerationTime : config.decelerationTime;
+        time = Mathf.Max(0.01f, time);
         return GetCurrentMoveSpeed() / time;
     }
 
-    private float GetNewVelocity(float acceleration)
+    private float GetNewVelocity(float acceleration, float dt)
     {
         float targetVel = (state.TargetX - transform.position.x) * GetCurrentMoveSpeed();
-        return Mathf.MoveTowards(state.VelocityX, targetVel, acceleration * Time.deltaTime);
+        return Mathf.MoveTowards(state.VelocityX, targetVel, acceleration * dt);
     }
 
     private float GetCurrentMoveSpeed()
@@ -40,9 +45,29 @@ public class PlayerMovement : MonoBehaviour
         return config.moveSpeed * appliedMultiplier;
     }
 
-    private void ApplyVelocity()
+    private void ApplyVelocity(float dt)
     {
-        transform.position += new Vector3(state.VelocityX * Time.deltaTime, 0f, 0f);
+        Vector3 pos = transform.position;
+        float previousX = pos.x;
+        float nextX = previousX + state.VelocityX * dt;
+
+        float minX = Mathf.Min(config.leftWallX, config.rightWallX);
+        float maxX = Mathf.Max(config.leftWallX, config.rightWallX);
+        nextX = Mathf.Clamp(nextX, minX, maxX);
+
+        if (HasCrossedTarget(previousX, nextX))
+            nextX = state.TargetX;
+
+        transform.position = new Vector3(nextX, pos.y, pos.z);
+    }
+
+    private bool HasCrossedTarget(float previousX, float nextX)
+    {
+        if (!state.IsMoving)
+            return false;
+
+        float target = state.TargetX;
+        return (previousX - target) * (nextX - target) <= 0f;
     }
 
     private void CheckArrival()

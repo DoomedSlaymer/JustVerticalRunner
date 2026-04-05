@@ -19,10 +19,17 @@ public class GameOverUIManager : MonoBehaviour
     [SerializeField] private float showDuration = 0.3f;
     [SerializeField] private float startScale = 0.9f;
 
+    [Header("Ads")]
+    [SerializeField, Min(2)] private int interstitialEveryRestarts = 3;
+    [SerializeField, Min(0.5f)] private float adCloseFallbackDelay = 1.5f;
+
+    private const string RestartCounterKey = "yg_restart_counter";
+
     private CanvasGroup canvasGroup;
     private RectTransform panelRect;
     private Coroutine showRoutine;
     private bool initialized;
+
     private void Awake()
     {
         if (Instance == null)
@@ -168,8 +175,65 @@ public class GameOverUIManager : MonoBehaviour
 
     private void OnRestartClick()
     {
+#if InterstitialAdv_yg
+        if (TryShowInterstitialBeforeRestart())
+            return;
+#endif
         SceneTransition.RestartCurrentScene();
     }
+
+#if InterstitialAdv_yg
+    private bool TryShowInterstitialBeforeRestart()
+    {
+        int restartCounter = PlayerPrefs.GetInt(RestartCounterKey, 0) + 1;
+        int interval = Mathf.Max(2, interstitialEveryRestarts);
+
+        if (restartCounter < interval)
+        {
+            PlayerPrefs.SetInt(RestartCounterKey, restartCounter);
+            PlayerPrefs.Save();
+            return false;
+        }
+
+        PlayerPrefs.SetInt(RestartCounterKey, 0);
+        PlayerPrefs.Save();
+
+        if (!YG2.isSDKEnabled)
+            return false;
+
+        StartCoroutine(RestartAfterInterstitialRoutine());
+        return true;
+    }
+
+    private IEnumerator RestartAfterInterstitialRoutine()
+    {
+        bool adFinished = false;
+
+        void MarkAdFinished()
+        {
+            adFinished = true;
+        }
+
+        YG2.onCloseInterAdv += MarkAdFinished;
+        YG2.onErrorInterAdv += MarkAdFinished;
+
+        YG2.InterstitialAdvShow();
+
+        float elapsed = 0f;
+        float timeout = Mathf.Max(0.5f, adCloseFallbackDelay);
+
+        while (!adFinished && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        YG2.onCloseInterAdv -= MarkAdFinished;
+        YG2.onErrorInterAdv -= MarkAdFinished;
+
+        SceneTransition.RestartCurrentScene();
+    }
+#endif
 
     private void OnMenuClick()
     {

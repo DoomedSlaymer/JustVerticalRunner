@@ -3,7 +3,15 @@ using UnityEngine;
 public class SpikeMover : MonoBehaviour
 {
     [SerializeField] private float baseSpeed = 5f;
-    [SerializeField] private float destroyBelowY = -20f;
+    [SerializeField] private float returnBelowY = -20f;
+
+    private SpikePool pool;
+
+    private void OnEnable()
+    {
+        if (pool == null)
+            pool = FindObjectOfType<SpikePool>();
+    }
 
     private void Update()
     {
@@ -18,7 +26,18 @@ public class SpikeMover : MonoBehaviour
         pos.y -= baseSpeed * speedMultiplier * Time.deltaTime;
         transform.position = pos;
 
-        if (pos.y < destroyBelowY)
-            gameObject.SetActive(false);
+        if (pos.y < returnBelowY)
+            ReturnToPoolOrDisable();
+    }
+
+    private void ReturnToPoolOrDisable()
+    {
+        if (pool != null)
+        {
+            pool.ReturnToPool(gameObject);
+            return;
+        }
+
+        gameObject.SetActive(false);
     }
 }
