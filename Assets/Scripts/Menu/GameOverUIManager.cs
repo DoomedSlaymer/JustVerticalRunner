@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using YG;
 
 public class GameOverUIManager : MonoBehaviour
 {
@@ -22,7 +23,6 @@ public class GameOverUIManager : MonoBehaviour
     private RectTransform panelRect;
     private Coroutine showRoutine;
     private bool initialized;
-
     private void Awake()
     {
         if (Instance == null)
