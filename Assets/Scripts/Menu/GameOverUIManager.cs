@@ -164,12 +164,12 @@ public class GameOverUIManager : MonoBehaviour
     private void UpdateScoreUI()
     {
         if (currentScoreText != null && GameManager.Instance != null)
-            currentScoreText.text = $"SCORE\n{Mathf.FloorToInt(GameManager.Instance.GetCurrentScore()):N0}";
+            currentScoreText.text = $"{translator.ScoreLabel}\n{Mathf.FloorToInt(GameManager.Instance.GetCurrentScore()):N0}";
 
         if (highScoreText != null)
         {
             HighScoreManager hsManager = FindObjectOfType<HighScoreManager>();
-            highScoreText.text = $"BEST\n{hsManager?.GetHighScore():N0}";
+            highScoreText.text = $"{translator.HighScoreLabel}\n{hsManager?.GetHighScore():N0}";
         }
     }
 

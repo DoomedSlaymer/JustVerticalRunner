@@ -1,13 +1,13 @@
-п»їusing UnityEngine;
+using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
 
 public class HighScoreManager : MonoBehaviour
 {
     /// <summary>
-    /// РЎРѕС…СЂР°РЅСЏРµС‚ Р»СѓС‡С€РёР№ СЂРµРєРѕСЂРґ РІ РєР»СЋС‡Рµ?
+    /// Сохраняет лучший рекорд в ключе?
     /// </summary>
-    [Header("UI (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)")]
+    [Header("UI (опционально)")]
     [SerializeField] public TMP_Text highScoreText;
 
     private const string HIGH_SCORE_KEY = "HighScoreRunner";
@@ -44,7 +44,7 @@ public class HighScoreManager : MonoBehaviour
     void UpdateUI()
     {
         if (cachedHighScoreText != null)
-            cachedHighScoreText.text = $"BEST\n{highScore:N0}";
+            cachedHighScoreText.text = $"{translator.HighScoreLabel}\n{highScore:N0}";
     }
 
     void Update()

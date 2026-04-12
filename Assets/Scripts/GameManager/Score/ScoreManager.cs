@@ -1,10 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
 
 public class ScoreManager : MonoBehaviour
 {
-    [Header("UI (опционально)")]
+    [Header("UI (�����������)")]
     [SerializeField] public TMP_Text scoreText;
 
     public float currentScore;
@@ -42,12 +42,10 @@ public class ScoreManager : MonoBehaviour
     void UpdateUI()
     {
         if (cachedScoreText != null)
-            cachedScoreText.text = $"SCORE\n{Mathf.FloorToInt(currentScore):N0}";
+            cachedScoreText.text = $"{translator.ScoreLabel}\n{Mathf.FloorToInt(currentScore):N0}";
 
-        // ✅ ✅ ✅ ПРАВИЛЬНО! float передается в DayNightCycle
         DayNightCycle.Instance?.UpdateScore(currentScore);
     }
-
 
     public void AddPoints(float points)
     {
