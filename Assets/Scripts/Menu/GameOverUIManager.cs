@@ -23,6 +23,9 @@ public class GameOverUIManager : MonoBehaviour
     [SerializeField, Min(2)] private int interstitialEveryRestarts = 3;
     [SerializeField, Min(0.5f)] private float adCloseFallbackDelay = 1.5f;
 
+    [Header("Leaderboard")]
+    [SerializeField] private YandexLeaderboardReporter leaderboardReporter;
+
     private const string RestartCounterKey = "yg_restart_counter";
 
     private CanvasGroup canvasGroup;
@@ -87,6 +90,7 @@ public class GameOverUIManager : MonoBehaviour
             return;
 
         UpdateScoreUI();
+        SubmitScoreToLeaderboard();
         gameOverPanel.SetActive(true);
 
         if (showRoutine != null)
@@ -171,6 +175,14 @@ public class GameOverUIManager : MonoBehaviour
             HighScoreManager hsManager = FindObjectOfType<HighScoreManager>();
             highScoreText.text = $"{translator.HighScoreLabel}\n{hsManager?.GetHighScore():N0}";
         }
+    }
+
+    private void SubmitScoreToLeaderboard()
+    {
+        if (leaderboardReporter == null)
+            leaderboardReporter = FindObjectOfType<YandexLeaderboardReporter>();
+
+        leaderboardReporter?.ReportHighScoreFromManager();
     }
 
     private void OnRestartClick()

@@ -40,8 +40,8 @@ public class translator : MonoBehaviour
 
     public static string CurrentLanguageCode { get; private set; } = "en";
     public static bool IsRussian => CurrentLanguageCode == "ru";
-    public static string ScoreLabel => IsRussian ? "����" : "SCORE";
-    public static string HighScoreLabel => IsRussian ? "������" : "BEST";
+    public static string ScoreLabel => IsRussian ? "СЧЁТ" : "SCORE";
+    public static string HighScoreLabel => IsRussian ? "РЕКОРД" : "BEST";
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")]

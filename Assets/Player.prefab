@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7808515665370095122}
-  - component: {fileID: 4428893722953185295}
   - component: {fileID: 7088593412766046148}
   - component: {fileID: 4394575934881816293}
   - component: {fileID: 2174515614816599128}
@@ -40,25 +39,6 @@ Transform:
   - {fileID: 5702641879567308792}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4428893722953185295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3821917509059458886}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 764b85f0d2d56ae4780c0e0aec9ad779, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  leftWallX: -1.7
-  rightWallX: 1.7
-  moveSpeed: 8
-  accelerationTime: 0.3
-  decelerationTime: 0.4
-  stopDistance: 0.1
-  inputBufferTime: 0.2
 --- !u!61 &7088593412766046148
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -121,6 +101,7 @@ MonoBehaviour:
   moveSpeed: 8
   accelerationTime: 0.3
   decelerationTime: 0.4
+  difficultySpeedInfluence: 1
   stopDistance: 0.1
   inputBufferTime: 0.2
 --- !u!114 &2174515614816599128
