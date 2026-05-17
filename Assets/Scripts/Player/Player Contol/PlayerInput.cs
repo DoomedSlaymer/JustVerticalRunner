@@ -33,7 +33,9 @@ public class PlayerInput : MonoBehaviour
 
     private bool WasMovePressed()
     {
-        return Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0);
+        bool keyboardOrMousePressed = Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0);
+        bool touchPressed = Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began;
+        return keyboardOrMousePressed || touchPressed;
     }
 
     private void BufferInput()
